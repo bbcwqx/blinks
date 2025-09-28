@@ -1,8 +1,9 @@
-import { Hono } from "hono";
 import { Agent } from "@atproto/api";
+import { Hono } from "hono";
+import { env } from "../lib/env.ts";
 
 const app = new Hono();
-const agent = new Agent({ service: "https://public.api.bsky.app." });
+const agent = new Agent({ service: env.ATPROTO_PUBLIC_API });
 
 app.get("/profile/:id", async (c) => {
   const id = c.req.param("id");

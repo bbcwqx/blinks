@@ -10,5 +10,5 @@ links to stuff on atproto
   - [x] save current `did`
   - [ ] handle errors
   - [ ] form validation
-- [ ] constants and env vars
+- [x] constants and env vars
 - [ ] save favicon

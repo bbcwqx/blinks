@@ -1,12 +1,13 @@
 import { isValidHandle } from "@atproto/syntax";
 import { Hono } from "hono";
+import { env } from "../lib/env.ts";
 import { isValidUrl } from "../lib/utils.ts";
 
 const app = new Hono();
 
 app.post("/login", async (c) => {
   const formData = await c.req.formData();
-  const id = formData.get("id-or-url") || "https://bsky.social";
+  const id = formData.get("id-or-url") || env.ATPROTO_BSKY_PDS;
 
   if (typeof id !== "string" || (!isValidHandle(id) && !isValidUrl(id))) {
     throw new Error("Invalid handle");
@@ -78,7 +79,8 @@ app.get("/login", (c) => {
               />
             </div>
             <small class="text-muted-foreground">
-              Handle resolution via <code>api.bsky.app</code>
+              Handle resolution via{" "}
+              <code>{env.ATPROTO_PUBLIC_API.replace("https://", "")}</code>
             </small>
           </div>
           <button class="btn" type="submit">Continue</button>

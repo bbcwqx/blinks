@@ -1,10 +1,11 @@
 import { NodeOAuthClient } from "@workspace/oauth-client";
-import { SessionStore, StateStore } from "./storage.ts";
 import { Context } from "hono";
+import { env } from "../env.ts";
+import { SessionStore, StateStore } from "./storage.ts";
 
 export const createClient = (c: Context) => {
-  const publicUrl = Deno.env.get("PUBLIC_URL");
-  const url = publicUrl || `http://127.0.0.1:${Deno.env.get("PORT") || 8000}`;
+  const publicUrl = env.APP_URL;
+  const url = publicUrl || `http://127.0.0.1:${env.APP_PORT}`;
   const enc = encodeURIComponent;
   return new NodeOAuthClient({
     clientMetadata: {
@@ -23,6 +24,7 @@ export const createClient = (c: Context) => {
       token_endpoint_auth_method: "none",
       dpop_bound_access_tokens: true,
     },
+    handleResolver: env.ATPROTO_HANDLE_RESOLVER,
     stateStore: new StateStore(c),
     sessionStore: new SessionStore(c),
   });
