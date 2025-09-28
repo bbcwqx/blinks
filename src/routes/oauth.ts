@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
+import { env } from "../lib/env.ts";
 
 const app = new Hono();
 
@@ -10,7 +11,7 @@ app.get("/oauth/callback", async (c) => {
 
     setCookie(c, "did", session.did, {
       httpOnly: true,
-      secure: false,
+      secure: !env.APP_DEV,
       sameSite: "Lax",
     });
 

@@ -6,6 +6,7 @@ import type {
 } from "@workspace/oauth-client";
 import { Context } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { env } from "../env.ts";
 
 export class StateStore implements NodeSavedStateStore {
   constructor(private c: Context) {}
@@ -22,7 +23,7 @@ export class StateStore implements NodeSavedStateStore {
 
     setCookie(this.c, key, state, {
       httpOnly: true,
-      secure: false,
+      secure: !env.APP_DEV,
       sameSite: "Lax",
       maxAge: 60 * 60, // 1 hour
     });
@@ -50,7 +51,7 @@ export class SessionStore implements NodeSavedSessionStore {
 
     setCookie(this.c, safeKey, state, {
       httpOnly: true,
-      secure: false,
+      secure: !env.APP_DEV,
       sameSite: "Lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });

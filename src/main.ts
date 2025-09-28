@@ -1,18 +1,18 @@
 import { Agent } from "@atproto/api";
 import { NodeOAuthClient } from "@workspace/oauth-client";
-import { Hono } from "hono";
+import { Context, Hono } from "hono";
+import { deleteCookie, getCookie } from "hono/cookie";
 import { serveStatic } from "hono/deno";
 import { logger } from "hono/logger";
 import template from "./app.tsx";
-import routes from "./routes/mod.ts";
 import { createClient } from "./lib/auth/client.ts";
-import { Context } from "hono";
-import { deleteCookie, getCookie } from "hono/cookie";
+import routes from "./routes/mod.ts";
 
 declare module "hono" {
   interface ContextVariableMap {
     oauthClient: NodeOAuthClient;
     getSessionAgent: () => Promise<Agent | null>;
+    https: boolean;
   }
 }
 
