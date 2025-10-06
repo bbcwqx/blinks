@@ -7,7 +7,7 @@ const app = new Hono();
 app.get("/oauth/callback", async (c) => {
   const params = new URLSearchParams(c.req.url.split("?")[1]);
   try {
-    const { session } = await c.get("oauthClient").callback(params);
+    const { session } = await c.get("ctx").oauthClient.callback(params);
 
     setCookie(c, "did", session.did, {
       httpOnly: true,

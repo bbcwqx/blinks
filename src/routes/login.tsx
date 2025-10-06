@@ -13,7 +13,7 @@ app.post("/login", async (c) => {
     throw new Error("Invalid handle");
   }
 
-  const url = await c.get("oauthClient").authorize(
+  const url = await c.get("ctx").oauthClient.authorize(
     id,
     {
       scope: "atproto transition:generic",

@@ -1,52 +1,28 @@
 import { Agent } from "@atproto/api";
 import { NodeOAuthClient } from "@workspace/oauth-client";
-import { Context, Hono } from "hono";
-import { deleteCookie, getCookie } from "hono/cookie";
+import { Hono } from "hono";
 import { serveStatic } from "hono/deno";
 import { logger } from "hono/logger";
 import template from "./app.tsx";
-import { createClient } from "./lib/auth/client.ts";
+import { context } from "./middleware.ts";
 import routes from "./routes/mod.ts";
 
 declare module "hono" {
   interface ContextVariableMap {
-    oauthClient: NodeOAuthClient;
-    getSessionAgent: () => Promise<Agent | null>;
-    https: boolean;
-  }
-}
-
-export async function getSessionAgent(
-  c: Context,
-) {
-  const did = getCookie(c, "did");
-
-  if (!did) {
-    return null;
-  }
-
-  try {
-    const oauthSession = await c.get("oauthClient").restore(did);
-    return oauthSession ? new Agent(oauthSession) : null;
-  } catch (err) {
-    console.warn({ err }, "oauth restore failed");
-    deleteCookie(c, "did");
-    return null;
+    ctx: {
+      oauthClient: NodeOAuthClient;
+      getSessionAgent: () => Promise<Agent | null>;
+    };
   }
 }
 
 const app = new Hono();
 
 app.use(logger());
-app.use(template);
-
-app.use(async (c, next) => {
-  c.set("oauthClient", createClient(c));
-  c.set("getSessionAgent", () => getSessionAgent(c));
-  await next();
-});
-
 app.use(serveStatic({ root: "./static" }));
+app.use(template);
+app.use(context);
+
 app.route("/", routes);
 
 export default {
