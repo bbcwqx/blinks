@@ -1,4 +1,4 @@
-import { Agent } from "@atproto/api";
+import { Agent, AppBskyActorDefs } from "@atproto/api";
 import { NodeOAuthClient } from "@workspace/oauth-client";
 import { Hono } from "hono";
 import { serveStatic } from "hono/deno";
@@ -12,6 +12,7 @@ declare module "hono" {
     ctx: {
       oauthClient: NodeOAuthClient;
       getSessionAgent: () => Promise<Agent | null>;
+      bskyProfile: AppBskyActorDefs.ProfileViewDetailed | undefined;
     };
   }
 }

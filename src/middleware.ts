@@ -6,6 +6,7 @@ import { createClient } from "./lib/auth/client.ts";
 
 export async function getSessionAgent(
   c: Context,
+  oauthClient: ReturnType<typeof createClient>,
 ) {
   const did = getCookie(c, "did");
 
@@ -14,7 +15,7 @@ export async function getSessionAgent(
   }
 
   try {
-    const oauthSession = await c.get("oauthClient").restore(did);
+    const oauthSession = await oauthClient.restore(did);
     return oauthSession ? new Agent(oauthSession) : null;
   } catch (err) {
     console.warn({ err }, "oauth restore failed");
@@ -24,9 +25,22 @@ export async function getSessionAgent(
 }
 
 export const context = createMiddleware(async (c, next) => {
+  const oauthClient = createClient(c);
+  const sessionAgent = await getSessionAgent(c, oauthClient);
+
+  let profile;
+
+  if (sessionAgent?.did) {
+    profile = (await sessionAgent.getProfile({
+      actor: sessionAgent.did,
+    })).data;
+  }
+
   c.set("ctx", {
-    oauthClient: createClient(c),
-    getSessionAgent: () => getSessionAgent(c),
+    oauthClient: oauthClient,
+    getSessionAgent: () => getSessionAgent(c, createClient(c)),
+    bskyProfile: profile,
   });
+
   await next();
 });
