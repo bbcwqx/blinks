@@ -1,5 +1,6 @@
 import { isValidHandle } from "@atproto/syntax";
 import { Hono } from "hono";
+import { createOAuthClient } from "../lib/auth/client.ts";
 import { env } from "../lib/env.ts";
 import { isValidUrl } from "../lib/utils.ts";
 
@@ -7,20 +8,21 @@ const app = new Hono();
 
 app.post("/login", async (c) => {
   const formData = await c.req.formData();
-  const id = formData.get("id-or-url") || env.ATPROTO_BSKY_PDS;
+  const loginHint = formData.get("login-hint") || env.ATPROTO_BSKY_PDS;
 
-  if (typeof id !== "string" || (!isValidHandle(id) && !isValidUrl(id))) {
+  if (
+    typeof loginHint !== "string" ||
+    (!isValidHandle(loginHint) && !isValidUrl(loginHint))
+  ) {
     throw new Error("Invalid handle");
   }
 
-  const url = await c.get("ctx").oauthClient.authorize(
-    id,
-    {
-      scope: "atproto transition:generic",
-    },
-  );
+  const oauthClient = createOAuthClient(loginHint);
+  const authResult = await oauthClient.authorize({
+    loginHint,
+  });
 
-  return c.redirect(url.toString());
+  return c.redirect(authResult.authorizationUrl);
 });
 
 app.get("/login", (c) => {
@@ -62,7 +64,7 @@ app.get("/login", (c) => {
         </div>
         <form class="form grid gap-6" method="post">
           <div class="grid gap-2">
-            <label for="id-or-url">
+            <label for="login-hint">
               Enter your Handle or PDS URL
             </label>
             <div class="relative">
@@ -71,17 +73,13 @@ app.get("/login", (c) => {
               </span>
               <input
                 type="text"
-                id="id-or-url"
-                name="id-or-url"
+                id="login-hint"
+                name="login-hint"
                 placeholder="alice.bsky.social, https://bsky.social"
                 class="pl-8"
                 required
               />
             </div>
-            <small class="text-muted-foreground">
-              Handle resolution via{" "}
-              <code>{env.ATPROTO_PUBLIC_API.replace("https://", "")}</code>
-            </small>
           </div>
           <button class="btn" type="submit">Continue</button>
         </form>

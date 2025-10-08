@@ -1,11 +1,13 @@
-import { AppBskyActorDefs } from "@atproto/api";
+import { AppBskyActorProfile } from "../lib/generated_client.ts";
 
 type Props = {
-  bskyProfile: AppBskyActorDefs.ProfileViewDetailed | undefined;
+  did: string | undefined;
+  bskyProfile: AppBskyActorProfile | undefined;
+  bskyAvatarUrl: string | undefined;
 };
 
 export const ProfileButton = (
-  { bskyProfile }: { bskyProfile: AppBskyActorDefs.ProfileViewDetailed },
+  props: Props,
 ) => {
   return (
     <div id="profile-dropdown-menu" class="dropdown-menu">
@@ -19,10 +21,10 @@ export const ProfileButton = (
       >
         <img
           class="size-8 shrink-0 object-cover rounded-full"
-          alt={bskyProfile.displayName}
-          src={bskyProfile.avatar}
+          alt={props.bskyProfile?.displayName}
+          src={props.bskyAvatarUrl}
         />
-        {bskyProfile.displayName}
+        {props.bskyProfile?.displayName}
       </button>
       <div
         data-popover
@@ -38,7 +40,7 @@ export const ProfileButton = (
           <div role="group" aria-labelledby="account-options">
             <div role="heading" class="font-bold">Me</div>
             <div role="menuitem">
-              <a href={"/profile/" + bskyProfile.did}>
+              <a href={`/profile/${props.did}`}>
                 Profile
               </a>
             </div>
@@ -66,7 +68,13 @@ export default function Navbar(props: Props) {
           blinks
         </a>
         {props.bskyProfile
-          ? <ProfileButton bskyProfile={props.bskyProfile} />
+          ? (
+            <ProfileButton
+              bskyProfile={props.bskyProfile}
+              bskyAvatarUrl={props.bskyAvatarUrl}
+              did={props.did}
+            />
+          )
           : (
             <a
               href="/login"

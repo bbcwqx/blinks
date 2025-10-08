@@ -1,31 +1,51 @@
-import { NodeOAuthClient } from "@workspace/oauth-client";
-import { Context } from "hono";
+import { DenoKVOAuthStorage, OAuthClient } from "@slices/oauth";
+import { DenoKVAdapter, SessionStore, withOAuthSession } from "@slices/session";
+import { AtProtoClient } from "../generated_client.ts";
 import { env } from "../env.ts";
-import { SessionStore, StateStore } from "./storage.ts";
+import { kv } from "../kv.ts";
 
-export const createClient = (c: Context) => {
-  const publicUrl = env.APP_URL;
-  const url = publicUrl || `http://127.0.0.1:${env.APP_PORT}`;
-  const enc = encodeURIComponent;
-  return new NodeOAuthClient({
-    clientMetadata: {
-      client_name: "blinks",
-      client_id: publicUrl
-        ? `${url}/client-metadata.json`
-        : `http://localhost?redirect_uri=${
-          enc(`${url}/oauth/callback`)
-        }&scope=${enc("atproto transition:generic")}`,
-      client_uri: url,
-      redirect_uris: [`${url}/oauth/callback`],
-      scope: "atproto transition:generic",
-      grant_types: ["authorization_code", "refresh_token"],
-      response_types: ["code"],
-      application_type: "web",
-      token_endpoint_auth_method: "none",
-      dpop_bound_access_tokens: true,
-    },
-    handleResolver: env.ATPROTO_HANDLE_RESOLVER,
-    stateStore: new StateStore(c),
-    sessionStore: new SessionStore(c),
-  });
+// OAuth setup
+export const oauthStorage = new DenoKVOAuthStorage(kv);
+export const oauthConfig = {
+  clientId: env.OAUTH_CLIENT_ID,
+  clientSecret: env.OAUTH_CLIENT_SECRET,
+  authBaseUrl: env.OAUTH_AIP_BASE_URL,
+  redirectUri: env.OAUTH_REDIRECT_URI,
+  scopes: ["atproto", "openid", "profile"],
 };
+
+// Configure sessions with Deno KV adapter
+export const sessionStore = new SessionStore({
+  adapter: new DenoKVAdapter(kv),
+  cookieName: "links-session",
+  cookieOptions: {
+    httpOnly: true,
+    secure: env.APP_ENV !== "dev",
+    sameSite: "lax",
+    path: "/",
+  },
+});
+
+// OAuth + Session integration
+export const oauthSessions = withOAuthSession(
+  sessionStore,
+  oauthConfig,
+  oauthStorage,
+  {
+    autoRefresh: true,
+  },
+);
+
+// Helper function to create user-scoped OAuth client
+export function createOAuthClient(userId: string): OAuthClient {
+  return new OAuthClient(oauthConfig, oauthStorage, userId);
+}
+
+// Helper function to create authenticated AtProto client for a user
+export function createSessionClient(userId: string): AtProtoClient {
+  const userOAuthClient = createOAuthClient(userId);
+  return new AtProtoClient(env.API_URL, env.SLICE_URI!, userOAuthClient);
+}
+
+// Public client for unauthenticated requests
+export const publicClient = new AtProtoClient(env.API_URL, env.SLICE_URI);

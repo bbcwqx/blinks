@@ -1,0 +1,5 @@
+{
+  "slice": "at://did:plc:rcjhtxh5v4mwvrbezap3hixf/network.slices.slice/3m2n7by3cbm2v",
+  "lexiconPath": "./lexicons",
+  "clientOutputPath": "./src/lib/generated_client.ts"
+}

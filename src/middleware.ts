@@ -1,45 +1,34 @@
-import { Agent } from "@atproto/api";
-import { Context } from "hono";
-import { deleteCookie, getCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
-import { createClient } from "./lib/auth/client.ts";
-
-export async function getSessionAgent(
-  c: Context,
-  oauthClient: ReturnType<typeof createClient>,
-) {
-  const did = getCookie(c, "did");
-
-  if (!did) {
-    return null;
-  }
-
-  try {
-    const oauthSession = await oauthClient.restore(did);
-    return oauthSession ? new Agent(oauthSession) : null;
-  } catch (err) {
-    console.warn({ err }, "oauth restore failed");
-    deleteCookie(c, "did");
-    return null;
-  }
-}
+import {
+  createOAuthClient,
+  publicClient,
+  sessionStore,
+} from "./lib/auth/client.ts";
 
 export const context = createMiddleware(async (c, next) => {
-  const oauthClient = createClient(c);
-  const sessionAgent = await getSessionAgent(c, oauthClient);
+  let auth;
 
-  let profile;
-
-  if (sessionAgent?.did) {
-    profile = (await sessionAgent.getProfile({
-      actor: sessionAgent.did,
-    })).data;
+  const session = await sessionStore.getSessionFromRequest(c.req.raw);
+  if (!session) {
+    auth = { currentUser: null, sessionId: null };
+  } else {
+    try {
+      const sessionOAuthClient = createOAuthClient(session.sessionId);
+      const userInfo = await sessionOAuthClient.getUserInfo();
+      auth = {
+        currentUser: userInfo || null,
+        sessionId: session.sessionId,
+      };
+    } catch {
+      auth = { currentUser: null, sessionId: session.sessionId };
+    }
   }
 
   c.set("ctx", {
-    oauthClient: oauthClient,
-    getSessionAgent: () => getSessionAgent(c, createClient(c)),
-    bskyProfile: profile,
+    auth,
+    atproto: {
+      publicClient,
+    },
   });
 
   await next();

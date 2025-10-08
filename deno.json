@@ -4,18 +4,21 @@
       "dependencies": ["dev:css", "dev:serve"]
     },
     "dev:css": "deno run -A --node-modules-dir --no-lock npm:@tailwindcss/cli -i ./src/app.css -o ./static/styles.css --watch",
-    "dev:serve": "deno serve --env-file --watch-hmr --host 127.0.0.1 -REN src/main.ts"
+    "dev:serve": "deno serve --env-file --watch-hmr --host 127.0.0.1 -RENW src/main.ts"
   },
   "imports": {
-    "@atproto/api": "npm:@atproto/api@^0.16.11",
     "@atproto/syntax": "npm:@atproto/syntax@^0.4.1",
+    "@slices/client": "jsr:@slices/client@^0.1.0",
+    "@slices/oauth": "jsr:@slices/oauth@^0.6.0",
+    "@slices/session": "jsr:@slices/session@^0.3.0",
     "basecoat-css": "npm:basecoat-css@^0.3.2",
-    "hono": "npm:hono@^4.9.9",
-    "tailwindcss": "npm:tailwindcss@^4.1.13"
+    "hono": "npm:hono@^4.9.10",
+    "tailwindcss": "npm:tailwindcss@^4.1.14"
   },
-  "workspace": ["./packages/*"],
   "compilerOptions": {
     "jsx": "precompile",
     "jsxImportSource": "hono/jsx"
-  }
+  },
+  "unstable": ["kv"],
+  "exclude": ["static"]
 }
