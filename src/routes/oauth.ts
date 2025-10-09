@@ -39,13 +39,8 @@ app.get("/oauth/callback", async (c) => {
       }
     }
 
-    return new Response(null, {
-      status: 302,
-      headers: {
-        Location: "/profile/" + userInfo?.sub,
-        "Set-Cookie": sessionCookie,
-      },
-    });
+    c.res.headers.append("Set-Cookie", sessionCookie);
+    return c.redirect("/profile/" + userInfo?.sub);
   } catch (err) {
     console.error({ err }, "oauth callback failed");
     return c.redirect("/");

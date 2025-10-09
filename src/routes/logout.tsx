@@ -11,14 +11,8 @@ app.get("/logout", async (c) => {
   }
 
   const clearCookie = sessionStore.createLogoutCookie();
-
-  return new Response(null, {
-    status: 302,
-    headers: {
-      Location: "/",
-      "Set-Cookie": clearCookie,
-    },
-  });
+  c.res.headers.append("Set-Cookie", clearCookie);
+  return c.redirect("/");
 });
 
 export default app;
