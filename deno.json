@@ -4,7 +4,8 @@
       "dependencies": ["dev:css", "dev:serve"]
     },
     "dev:css": "deno run -A --node-modules-dir --no-lock npm:@tailwindcss/cli -i ./src/app.css -o ./static/styles.css --watch",
-    "dev:serve": "deno serve --env-file --watch-hmr --host 127.0.0.1 -RENW src/main.ts"
+    "dev:serve": "deno serve --env-file --watch-hmr --host 127.0.0.1 -RENW src/main.ts",
+    "tunnel": "deno serve --tunnel --watch-hmr -REN src/main.ts"
   },
   "imports": {
     "@atproto/syntax": "npm:@atproto/syntax@^0.4.1",
@@ -20,5 +21,9 @@
     "jsxImportSource": "hono/jsx"
   },
   "unstable": ["kv"],
-  "exclude": ["static"]
+  "exclude": ["static"],
+  "deploy": {
+    "org": "bbcwqx",
+    "app": "blinks"
+  }
 }
